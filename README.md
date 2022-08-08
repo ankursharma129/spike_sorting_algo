@@ -2,9 +2,9 @@
 
 Files and folders:
 
-./data: has all the data files. The .dat files are used to read and data from CPP.
-.ipynb files mostly do what their title says. Other explanations are at the top of each file.
-.cpp files and .h files are explained below
+- ./data: has all the data files. The .dat files are used to read and data from CPP.
+- .ipynb files mostly do what their title says. Other explanations are at the top of each file.
+- .cpp files and .h files are explained below
 
 #### Process of getting to the results:
 

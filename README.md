@@ -1,61 +1,34 @@
-# Neuralink DSP Homework
+## Neuralink Spike Sorting Homework
 
-Neurons transmit signals to other neurons in the form of action potentials. An action
-potential is a cascading discharge of ions through the neuron's membrane. Assuming
-average brain voltage potential to be ground, if one measures the extracellular
-voltage near a neuron they will see action potentials as these sharp "spikes"
-that are well above the noise floor.
+Files and folders:
 
-This exercise will require you to write an algorithm to detect spikes from
-a raw stream of voltages recorded near neurons in a live brain. These datasets
-are a combination of synthetic and real recordings, with different types of noise
-overlaid onto them.
+./data: has all the data files. The .dat files are used to read and data from CPP.
+.ipynb files mostly do what their title says. Other explanations are at the top of each file.
+.cpp files and .h files are explained below
 
-The expected deliverables of the homework are:
-1. An implementation of an algorithm that can accurately detect spikes, written in C, C++ or Rust.
-  - We have provided a header file, `spike_detection.h`, for you to implement against.
-    It is imperative that you correctly implement the interface provided in this header file
-    without modification, because we will test your algorithm against additional datasets with
-    different types of noise to determine its robustness.
-  - It should be efficient, and appropriate for execution on a real time embedded system.
-    If you need a supercomputer to run it, that's bad.
-  - A “spike” consists of many samples. Which sample you decide to trigger on is up to you,
-    but it should be consistent, and within a few milliseconds of the peak of the spike.
-  - Using only fixed-point math is a bonus, but not required.
-2. A test suite for the algorithm and its subroutines.
-3. A document/scripts describing your analysis and detailing the research you did for this homework.
+#### Process of getting to the results:
 
-When designing the algorithm, please take into account the following considerations:
-- Document your development progress thoroughly. We want to see your process of
-  experimentation and decision-making.
-- We recommend that you prototype in Python and submit scripts that demonstrate the trade-offs
-  between different algorithms that you try.
-- Make sure that your scripts are properly documented and easy to use.
+1. Analysis of the data provided. I went through the data thoroughly in the file `dataInspection.ipynb`. Understood the frequency components and decided to filter out some specific frequencies and leave out the rest to find the neural spikes.
+2. Went through a few papers including `Obeid, Iyad, and Patrick D. Wolf. "Evaluation of spike-detection algorithms fora brain-machine interface application." IEEE Transactions on Biomedical Engineering 51.6 (2004): 905-911.` and a video on spike detection and usual algorithms used: https://www.youtube.com/watch?v=8xeC5CV4UB8&t=1084s&ab_channel=T%C3%BCbingenMachineLearning
+3. In the video mentioned above, I found a good formula to use for an analogue to std deviation, which avoided the need to find square root.
+4. I then began working on an algorithm to figure out the filtering in python. I used a butterworth filter with IIR coefficients. This worked better than an FIR filter.
+5. I developed a simple spike detection algo which would filter out spikes based on some threshold. At this point I was under the assumption that all the spikes would be in the same direction, i.e. up. 
+6. However, slowly when this algorithm did not perform so well, I wondered what could have been going wrong and discovered that the spikes could be in either up or down direction.
+7. Before proceeding with a new algorithm however, I tested how to make use of simple filtering on a real time data. In file `algorithm2.ipynb`, I used a constant size buffer to keep a context of the filtered spikes to find the mean and median in context to use for thresholding.
+8. Once this worked, I set on the work on a better algorithm for spike sorting. In file `templateMatchingAlgorithm.ipynb`, I tried to use template matching algorithm to see if some template matching and correlation coefficient could be used to find spikes, but it was not very reliable and thresholds were a little difficult to figure out.
+9. Next I tried to trace the spike in `spikeTracingAlgo.ipynb`. Here I tried to use the different instances in spike like hypopolarization, depolarization, overshoot, repolarization and hyperpolarization to see when hyperpolarization and if I could figure that out accurately. This could have worked, but it seemed like there should have been a better a way to do it.
+10. Next, I looked into changes in direction of spike data and kept a context of last three direction changes. If the direction changes happened in `UDU` or `DUD` fashion and if the corresponding peak of higher than `3.5 * std_dev`,  I classified it as a spike. The number `3.5` was determined by experimentation. So, each spike has been classified as such when it is completed: i.e. post hyperpolarization.
+11. C++ implementation: I used C++ to implement the final algorithm. The filtering is done using fixed point arithmetic. I took help from the implementation here https://github.com/berndporr/iir_fixed_point. This is a repository I came across during one of my college projects.
 
-It is important to demonstrate your first principles thinking in this exercise.
-We recommend against implementing known algorithms plucked from academic papers.
+Future work: The algorithm is performing decently well, but it is still not perfect. More information about the signal and more research on the nature of neural spikes would yield a better result.
 
-If you have any questions, feel free to reach out.
-We want to set you up for success.
+The description of the algorithm and the description of all the files has been placed at the top of each of them. To put the deliverables together:
 
-## Example Data
+- Main algorithm in C++ implemented in file `spike_detection.h`. It can be imported directly into a calling function.
+- Test suite for the algorithm: File `spike_detection.cpp` is a standalone file that implements `main` function calling the data from a .dat file.
+- The fixed point IIR filter is in the file `filter.h`.
+- `spike_detection_call.cpp` is importing the `spike_detection.h` file. This was done to ensure that the final deliverable is working fine.
 
-The example data will consist of CSV files organized in 2 columns:
-- `samples`: Waveform samples, separated by semicolons.
-- `spike_times`: Indices within the waveform indicating when a spike was detected,
-  separated by semicolons.
+I had fun working on this problem over the weekend. Learned a lot of new things and loved to get a glimpse of what real world data processing can be like. I hope the documenation can guide you through all the files that I have put together. Please let me know if anything needs clarification.
 
-**Notes**
-- Each row in the CSV file contains a different dataset, with increasing difficulty.
-- Depending on the algorithm used to label the example data, the spike indicies
-  will point to some sample between the beginning and end of the spike.
-- The sample rate of the data is 20kHz.
-- The samples are outputs from 10-bit ADC, expressed in signed form.
-
-A visualization script has been provided for convenience:
-
-```
-pip3 install matplotlib
-
-python3 visualize_signal.py {csv_file} {row_to_plot}
-```
+Good day!

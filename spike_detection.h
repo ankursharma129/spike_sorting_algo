@@ -101,6 +101,9 @@ int32_t peaks = 0; // Counting the number of peaks determined
  */
 bool checkSampleForSpike(double mean, double median){
     // Condition DUD => when upward spike happens
+    // a. central peak should be higher than n*median
+    // b. central peak should be taller than the side peaks
+    // c. side peaks should be lower than the mean value of the moving buffer and less than n/2*median
     if((three_states[0] == false && three_states[1] == true and three_states[2] == false) && 
     (three_state_values[0] < - (N/2) * median &&
     three_state_values[1] - mean > (N) * median && 
@@ -111,6 +114,9 @@ bool checkSampleForSpike(double mean, double median){
     }
     
     // Condition UDU => when downward spike happens
+    // a. central peak should be higher than n*median
+    // b. central peak should be taller than the side peaks
+    // c. side peaks should be higher than the mean value of the moving buffer
     if((three_states[0] == true && three_states[1] == false and three_states[2] == true) && 
     (three_state_values[0] > mean && 
     three_state_values[1] - mean < - (N) * median && 

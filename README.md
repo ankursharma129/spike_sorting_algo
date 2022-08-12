@@ -1,4 +1,4 @@
-## Neuralink Spike Sorting Homework
+## Spike Sorting Homework
 
 Files and folders:
 
